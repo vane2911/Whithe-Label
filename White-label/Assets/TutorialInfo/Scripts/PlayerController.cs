@@ -10,14 +10,18 @@ public class PlayerController : MonoBehaviour
     public float gravityValue = -9.81f;
     
     [Header("Configuración de Cámara (Touchpad)")]
-    public Transform eyesTransform;        // Arrastra aquí el CamaraRoot
+    public Transform eyesTransform;
     public float sensitivity = 0.15f;      
     private float xRotation = 0f;
 
     [Header("Configuración de Interacción")]
     public float interactionDistance = 6.0f;
-    public LayerMask interactableLayer;     // Asegúrate de que sea "Default"
-    public GameObject interactionText;      // El texto de "Presiona E"
+    public LayerMask interactableLayer;
+    public GameObject interactionContainer;
+    public TextMeshProUGUI mensajeTexto;
+
+    [Header("Referencia al PopUp (Onboarding)")]
+    public GameObject popUpBienvenida; // Arrastra aquí el panel "PopUp_Bienvenida"
 
     private CharacterController controller;
     private Vector2 moveInput;
@@ -28,22 +32,55 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         controller = GetComponent<CharacterController>();
-        Cursor.lockState = CursorLockMode.Locked; 
-        if (interactionText != null) interactionText.SetActive(false);
+        
+        // Al inicio, si el PopUp está activo, liberamos el ratón para poder cerrarlo
+        ActualizarEstadoCursor();
+
+        if (interactionContainer != null) interactionContainer.SetActive(false);
     }
 
     public void OnMove(InputValue value) => moveInput = value.Get<Vector2>();
     public void OnLook(InputValue value) => lookInput = value.Get<Vector2>();
+    
     public void OnInteract(InputValue value)
     {
-        if (currentInteractable != null) currentInteractable.Interact();
+        // Solo interactúa si no hay Pop-up estorbando
+        if (popUpBienvenida != null && popUpBienvenida.activeSelf) return;
+
+        if (currentInteractable != null && value.isPressed) 
+        {
+            currentInteractable.Interact();
+        }
     }
 
     void Update()
     {
+        // PASO CLAVE: Si el PopUp está activo, detenemos todo y liberamos el cursor
+        if (popUpBienvenida != null && popUpBienvenida.activeSelf)
+        {
+            ActualizarEstadoCursor();
+            return; 
+        }
+
+        // Si llegamos aquí, el PopUp está cerrado, así que bloqueamos el cursor y movemos
+        ActualizarEstadoCursor();
         ManejarRotacion();
         ManejarMovimiento();
         ManejarInteraccion();
+    }
+
+    void ActualizarEstadoCursor()
+    {
+        if (popUpBienvenida != null && popUpBienvenida.activeSelf)
+        {
+            Cursor.lockState = CursorLockMode.None; // Permite mover el ratón para picar botones
+            Cursor.visible = true;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked; // Bloquea el ratón al centro para jugar
+            Cursor.visible = false;
+        }
     }
 
     void ManejarRotacion()
@@ -77,10 +114,8 @@ public class PlayerController : MonoBehaviour
         Ray ray = new Ray(eyesTransform.position, eyesTransform.forward);
         RaycastHit hit;
 
-        // Lanzamos el rayo para detectar objetos en la layer Default
         if (Physics.Raycast(ray, out hit, interactionDistance, interactableLayer))
         {
-            // BUSQUEDA FLEXIBLE: Encuentra el script incluso si está en el objeto padre
             IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();
             
             if (interactable != null)
@@ -88,9 +123,15 @@ public class PlayerController : MonoBehaviour
                 if (interactable != currentInteractable)
                 {
                     if (currentInteractable != null) currentInteractable.OnLoseFocus();
+                    
                     currentInteractable = interactable;
                     currentInteractable.OnFocus(); 
-                    if (interactionText != null) interactionText.SetActive(true); 
+
+                    if (interactionContainer != null) 
+                    {
+                        interactionContainer.SetActive(true);
+                        if (mensajeTexto != null) mensajeTexto.text = "Presiona E para interactuar"; 
+                    }
                 }
             }
             else { LimpiarInteraccion(); }
@@ -104,7 +145,7 @@ public class PlayerController : MonoBehaviour
         {
             currentInteractable.OnLoseFocus();
             currentInteractable = null;
-            if (interactionText != null) interactionText.SetActive(false);
+            if (interactionContainer != null) interactionContainer.SetActive(false);
         }
     }
 }
