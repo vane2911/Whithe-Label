@@ -1,5 +1,6 @@
 using UnityEngine;
-using UnityEngine.InputSystem; // Requerido para el Input System unificado
+using UnityEngine.InputSystem;
+using TMPro;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
@@ -7,106 +8,103 @@ public class PlayerController : MonoBehaviour
     [Header("Configuración de Movimiento")]
     public float playerSpeed = 5.0f;
     public float gravityValue = -9.81f;
+    
+    [Header("Configuración de Cámara (Touchpad)")]
+    public Transform eyesTransform;        // Arrastra aquí el CamaraRoot
+    public float sensitivity = 0.15f;      
+    private float xRotation = 0f;
 
     [Header("Configuración de Interacción")]
-    public float interactDistance = 3.0f; // Distancia máxima para interactuar
-   
+    public float interactionDistance = 6.0f;
+    public LayerMask interactableLayer;     // Asegúrate de que sea "Default"
+    public GameObject interactionText;      // El texto de "Presiona E"
+
     private CharacterController controller;
-    private Vector3 playerVelocity;
-    private bool groundedPlayer;
-   
-    // Almacenamiento de Input
     private Vector2 moveInput;
-    private IInteractable currentlyFocusedInteractable; // Para el sistema de feedback
+    private Vector2 lookInput;
+    private Vector3 playerVelocity;
+    private IInteractable currentInteractable;
 
     private void Start()
     {
         controller = GetComponent<CharacterController>();
-       
-        // Configuración de visualización del cursor para la Fase 2
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked; 
+        if (interactionText != null) interactionText.SetActive(false);
     }
 
-    // Tarea: Implementar movimiento básico del jugador (Teclado y Gamepad)
-    public void OnMove(InputValue value)
-    {
-        moveInput = value.Get<Vector2>();
-    }
-
-    // Tarea: Sistema de interacción genérico (Activado por 'E' o 'Button South')
+    public void OnMove(InputValue value) => moveInput = value.Get<Vector2>();
+    public void OnLook(InputValue value) => lookInput = value.Get<Vector2>();
     public void OnInteract(InputValue value)
     {
-        if (value.isPressed && currentlyFocusedInteractable != null)
-        {
-            currentlyFocusedInteractable.Interact();
-            Debug.Log("Interactuando con objeto");
-        }
+        if (currentInteractable != null) currentInteractable.Interact();
     }
 
     void Update()
     {
-        // 1. Lógica de Gravedad
-        groundedPlayer = controller.isGrounded;
-        if (groundedPlayer && playerVelocity.y < 0)
-        {
-            playerVelocity.y = 0f;
-        }
+        ManejarRotacion();
+        ManejarMovimiento();
+        ManejarInteraccion();
+    }
 
-        // 2. Lógica de Movimiento relativo a la cámara
-        Vector3 move = Camera.main.transform.forward * moveInput.y + Camera.main.transform.right * moveInput.x;
-        move.y = 0f; // Bloqueamos el eje Y para evitar que el jugador vuele al mirar arriba
+    void ManejarRotacion()
+    {
+        float mouseX = lookInput.x * sensitivity;
+        float mouseY = lookInput.y * sensitivity;
 
+        transform.Rotate(Vector3.up * mouseX); 
+
+        xRotation -= mouseY;
+        xRotation = Mathf.Clamp(xRotation, -80f, 80f); 
+        
+        if (eyesTransform != null)
+            eyesTransform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+    }
+
+    void ManejarMovimiento()
+    {
+        if (controller.isGrounded && playerVelocity.y < 0) playerVelocity.y = 0f;
+
+        Vector3 move = transform.forward * moveInput.y + transform.right * moveInput.x;
         controller.Move(move * Time.deltaTime * playerSpeed);
 
-        // Aplicar caída por gravedad
         playerVelocity.y += gravityValue * Time.deltaTime;
         controller.Move(playerVelocity * Time.deltaTime);
-
-        // 3. Tarea: Sistema de feedback (Detección constante del objetivo)
-        HandleInteractionDetection();
     }
 
-    private void HandleInteractionDetection()
+    void ManejarInteraccion()
     {
-        // Lanzamos un rayo desde el centro de la cámara hacia adelante
-        Ray ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
+        if (eyesTransform == null) return;
+        Ray ray = new Ray(eyesTransform.position, eyesTransform.forward);
         RaycastHit hit;
 
-        if (Physics.Raycast(ray, out hit, interactDistance))
+        // Lanzamos el rayo para detectar objetos en la layer Default
+        if (Physics.Raycast(ray, out hit, interactionDistance, interactableLayer))
         {
-            // Intentamos obtener el componente interactuable
-            IInteractable interactable = hit.collider.GetComponent<IInteractable>();
-
+            // BUSQUEDA FLEXIBLE: Encuentra el script incluso si está en el objeto padre
+            IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();
+            
             if (interactable != null)
             {
-                if (currentlyFocusedInteractable != interactable)
+                if (interactable != currentInteractable)
                 {
-                    // Si cambiamos de objeto, limpiamos el anterior
-                    if (currentlyFocusedInteractable != null) currentlyFocusedInteractable.OnLoseFocus();
-                   
-                    // Activamos el feedback visual en el nuevo objeto
-                    currentlyFocusedInteractable = interactable;
-                    currentlyFocusedInteractable.OnFocus();
+                    if (currentInteractable != null) currentInteractable.OnLoseFocus();
+                    currentInteractable = interactable;
+                    currentInteractable.OnFocus(); 
+                    if (interactionText != null) interactionText.SetActive(true); 
                 }
             }
-            else
-            {
-                ClearCurrentFocus();
-            }
+            else { LimpiarInteraccion(); }
         }
-        else
-        {
-            ClearCurrentFocus();
-        }
+        else { LimpiarInteraccion(); }
     }
 
-    private void ClearCurrentFocus()
+    void LimpiarInteraccion()
     {
-        if (currentlyFocusedInteractable != null)
+        if (currentInteractable != null)
         {
-            currentlyFocusedInteractable.OnLoseFocus();
-            currentlyFocusedInteractable = null;
+            currentInteractable.OnLoseFocus();
+            currentInteractable = null;
+            if (interactionText != null) interactionText.SetActive(false);
         }
     }
 }
