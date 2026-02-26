@@ -21,7 +21,10 @@ public class PlayerController : MonoBehaviour
     public TextMeshProUGUI mensajeTexto;
 
     [Header("Referencia al PopUp (Onboarding)")]
-    public GameObject popUpBienvenida; // Arrastra aquí el panel "PopUp_Bienvenida"
+    public GameObject popUpBienvenida; 
+
+    [Header("Referencias de Sistema")]
+    public CameraManager camManager; // Referencia necesaria para el cambio de vistas
 
     private CharacterController controller;
     private Vector2 moveInput;
@@ -33,7 +36,7 @@ public class PlayerController : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
         
-        // Al inicio, si el PopUp está activo, liberamos el ratón para poder cerrarlo
+        // Al inicio, si el PopUp está activo, liberamos el ratón
         ActualizarEstadoCursor();
 
         if (interactionContainer != null) interactionContainer.SetActive(false);
@@ -44,7 +47,6 @@ public class PlayerController : MonoBehaviour
     
     public void OnInteract(InputValue value)
     {
-        // Solo interactúa si no hay Pop-up estorbando
         if (popUpBienvenida != null && popUpBienvenida.activeSelf) return;
 
         if (currentInteractable != null && value.isPressed) 
@@ -55,16 +57,22 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        // PASO CLAVE: Si el PopUp está activo, detenemos todo y liberamos el cursor
+        // Si el PopUp está activo, detenemos todo y liberamos el cursor
         if (popUpBienvenida != null && popUpBienvenida.activeSelf)
         {
             ActualizarEstadoCursor();
-            return; 
+            return;
         }
 
-        // Si llegamos aquí, el PopUp está cerrado, así que bloqueamos el cursor y movemos
         ActualizarEstadoCursor();
-        ManejarRotacion();
+
+        // SOLO rotar con el ratón si es 1P o 3P (Vistas 0 y 1)
+        // Se añade validación para evitar errores si camManager no está asignado
+        if (camManager == null || camManager.vistaActual == 0 || camManager.vistaActual == 1)
+        {
+            ManejarRotacion();
+        }
+        
         ManejarMovimiento();
         ManejarInteraccion();
     }
@@ -73,12 +81,12 @@ public class PlayerController : MonoBehaviour
     {
         if (popUpBienvenida != null && popUpBienvenida.activeSelf)
         {
-            Cursor.lockState = CursorLockMode.None; // Permite mover el ratón para picar botones
+            Cursor.lockState = CursorLockMode.None; 
             Cursor.visible = true;
         }
         else
         {
-            Cursor.lockState = CursorLockMode.Locked; // Bloquea el ratón al centro para jugar
+            Cursor.lockState = CursorLockMode.Locked; 
             Cursor.visible = false;
         }
     }
@@ -100,8 +108,29 @@ public class PlayerController : MonoBehaviour
     void ManejarMovimiento()
     {
         if (controller.isGrounded && playerVelocity.y < 0) playerVelocity.y = 0f;
+        
+        Vector3 move;
 
-        Vector3 move = transform.forward * moveInput.y + transform.right * moveInput.x;
+        // Lógica de movimiento adaptativa según la cámara activa
+        if (camManager != null && camManager.vistaActual == 3) // ISOMÉTRICO
+        {
+            Vector3 inputDir = new Vector3(moveInput.x, 0, moveInput.y);
+            move = Quaternion.Euler(0, 45, 0) * inputDir;
+            
+            if (move != Vector3.zero)
+                transform.forward = move;
+        }
+        else if (camManager != null && camManager.vistaActual == 2) // 2.5D
+        {
+            move = new Vector3(moveInput.x, 0, 0); // Bloqueamos eje Z
+            if (move != Vector3.zero)
+                transform.forward = move;
+        }
+        else // 1P y 3P (Basado en la rotación del personaje)
+        {
+            move = transform.forward * moveInput.y + transform.right * moveInput.x;
+        }
+
         controller.Move(move * Time.deltaTime * playerSpeed);
 
         playerVelocity.y += gravityValue * Time.deltaTime;
