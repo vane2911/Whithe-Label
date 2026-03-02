@@ -122,7 +122,7 @@ public class PlayerController : MonoBehaviour
         }
         else if (camManager != null && camManager.vistaActual == 2) // 2.5D
         {
-            move = new Vector3(moveInput.x, 0, 0); // Bloqueamos eje Z
+            move = new Vector3(moveInput.x, 0, moveInput.y); // Bloqueamos eje Z
             if (move != Vector3.zero)
                 transform.forward = move;
         }

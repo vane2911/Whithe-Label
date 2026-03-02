@@ -1,5 +1,6 @@
 using UnityEngine;
 using Cinemachine;
+using UnityEngine.InputSystem;
 
 public class CameraManager : MonoBehaviour
 {
@@ -10,35 +11,32 @@ public class CameraManager : MonoBehaviour
     public CinemachineVirtualCamera camIso;
 
     [Header("Configuración de Control")]
-    [Tooltip("Índice de la vista inicial (0:1P, 1:3P, 2:2.5D, 3:Iso)")]
     public int vistaActual = 1; 
 
-    void Start()
+    private void Start()
     {
-        // Al iniciar, nos aseguramos de que la cámara correcta tenga la prioridad
         CambiarVista(vistaActual);
     }
 
-    void Update()
+    private void Update()
     {
-        // Teclas rápidas para probar el cambio de cámara durante el juego
-        if (Input.GetKeyDown(KeyCode.Alpha1)) CambiarVista(0);
-        if (Input.GetKeyDown(KeyCode.Alpha2)) CambiarVista(1);
-        if (Input.GetKeyDown(KeyCode.Alpha3)) CambiarVista(2);
-        if (Input.GetKeyDown(KeyCode.Alpha4)) CambiarVista(3);
+        // Cambiamos a la forma moderna de detectar teclas para evitar errores rojos
+        if (Keyboard.current.digit1Key.wasPressedThisFrame) CambiarVista(0);
+        if (Keyboard.current.digit2Key.wasPressedThisFrame) CambiarVista(1);
+        if (Keyboard.current.digit3Key.wasPressedThisFrame) CambiarVista(2);
+        if (Keyboard.current.digit4Key.wasPressedThisFrame) CambiarVista(3);
     }
 
     public void CambiarVista(int indice)
     {
         vistaActual = indice;
 
-        // Reset de prioridades (todas vuelven a la base de 10)
+        // Reset de prioridades
         cam1ra.Priority = 10;
         cam3ra.Priority = 10;
         cam25D.Priority = 10;
         camIso.Priority = 10;
 
-        // La cámara seleccionada sube su prioridad para que Cinemachine haga el cambio
         switch (indice)
         {
             case 0: cam1ra.Priority = 20; break;
@@ -47,6 +45,18 @@ public class CameraManager : MonoBehaviour
             case 3: camIso.Priority = 20; break;
         }
 
+        ActualizarVisibilidadPersonaje(indice);
         Debug.Log("Cámara activa: " + indice);
+    }
+
+    void ActualizarVisibilidadPersonaje(int indice)
+    {
+        int capaInvisible = LayerMask.NameToLayer("CuerpoInvisible");
+        if (capaInvisible == -1) return; // Por si el nombre está mal escrito
+
+        if (indice == 0) // 1ra Persona
+            Camera.main.cullingMask &= ~(1 << capaInvisible);
+        else // 3ra, 2.5D, ISO
+            Camera.main.cullingMask |= (1 << capaInvisible);
     }
 }
