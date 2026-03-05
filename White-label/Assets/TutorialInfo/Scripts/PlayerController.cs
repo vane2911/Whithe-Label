@@ -20,11 +20,15 @@ public class PlayerController : MonoBehaviour
     public GameObject interactionContainer;
     public TextMeshProUGUI mensajeTexto;
 
+    [Header("UI de Puntos")]
+    public TextMeshProUGUI textoPuntos;
+
     [Header("Referencia al PopUp (Onboarding)")]
     public GameObject popUpBienvenida; 
 
     [Header("Referencias de Sistema")]
     public CameraManager camManager; // Referencia necesaria para el cambio de vistas
+    public SaveManager saveManager;
 
     private CharacterController controller;
     private Vector2 moveInput;
@@ -40,6 +44,8 @@ public class PlayerController : MonoBehaviour
         ActualizarEstadoCursor();
 
         if (interactionContainer != null) interactionContainer.SetActive(false);
+
+        ActualizarUIProgreso(); // Cargamos el valor de puntos inicial desde el SaveManager
     }
 
     public void OnMove(InputValue value) => moveInput = value.Get<Vector2>();
@@ -55,12 +61,22 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public void ActualizarUIProgreso()
+    {
+        if (saveManager != null && textoPuntos != null)
+        {
+            textoPuntos.text = "Puntos: " + saveManager.misDatos.puntos;
+        }
+    }
+
     void Update()
     {
         // Si el PopUp está activo, detenemos todo y liberamos el cursor
         if (popUpBienvenida != null && popUpBienvenida.activeSelf)
         {
             ActualizarEstadoCursor();
+            //Cursor.lockState = CursorLockMode.None; 
+            //Cursor.visible = true;
             return;
         }
 
@@ -155,6 +171,13 @@ public class PlayerController : MonoBehaviour
                     
                     currentInteractable = interactable;
                     currentInteractable.OnFocus(); 
+
+                    ItemProgreso progreso = hit.collider.GetComponentInParent<ItemProgreso>();
+                    if (progreso != null) 
+                    {
+                        // Registramos el progreso (esto guarda el JSON automáticamente)
+                        progreso.RegistrarProgreso(); 
+                    }
 
                     if (interactionContainer != null) 
                     {
