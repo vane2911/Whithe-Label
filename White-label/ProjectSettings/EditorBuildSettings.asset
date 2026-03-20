@@ -6,11 +6,20 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/MenuPrincipal.unity
+    path: Assets/_Core/Scenes/MenuPrincipal.unity
     guid: ecf71855883f84745844e1858010e886
   - enabled: 1
-    path: Assets/Scenes/Escena1.unity
+    path: Assets/_Core/Scenes/Escena1.unity
     guid: e8b9cbe3c5dc7fa4b853b5a11ed126f7
+  - enabled: 1
+    path: Assets/_Sectors/Wellness/Scenes/SceneWellness.unity
+    guid: f114675ac986b0b419a51d940abef110
+  - enabled: 1
+    path: Assets/_Sectors/Fintech/Scenes/SceneFintech.unity
+    guid: b370b748d7d1c094bac47424125c492a
+  - enabled: 1
+    path: Assets/_Sectors/Fintech/Scenes/Actividad1.unity
+    guid: 80bf78d82ad677f4eae8f39462622b55
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
