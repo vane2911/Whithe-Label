@@ -1,29 +1,32 @@
 using UnityEngine;
-
+ 
 public class FuenteAgua : MonoBehaviour, IInteractable
 {
     private Renderer myRenderer;
     private Color originalEmission;
-    
+ 
     [Header("Ajustes de Brillo")]
-    [ColorUsage(true, true)] 
-    public Color highlightColor = Color.white; 
-
+    [ColorUsage(true, true)]
+    public Color highlightColor = Color.white;
+ 
+    [Header("WhiteLabel - Texto de Interacción")]
+    [Tooltip("Texto que se muestra cuando el jugador apunta a la fuente")]
+    [SerializeField] private string textoInteraccion;
+ 
     void Start()
     {
         myRenderer = GetComponentInChildren<Renderer>();
         if (myRenderer != null)
         {
-            // Guardamos el color inicial (que debe ser negro)
             originalEmission = myRenderer.material.GetColor("_EmissionColor");
         }
     }
-
+ 
     public void Interact()
     {
-        Debug.Log("Mich, el personaje está bebiendo agua de la fuente.");
+        Debug.Log("El personaje está interactuando con la fuente.");
     }
-
+ 
     public void OnFocus()
     {
         if (myRenderer != null)
@@ -32,7 +35,7 @@ public class FuenteAgua : MonoBehaviour, IInteractable
             myRenderer.material.EnableKeyword("_EMISSION");
         }
     }
-
+ 
     public void OnLoseFocus()
     {
         if (myRenderer != null)
@@ -40,10 +43,9 @@ public class FuenteAgua : MonoBehaviour, IInteractable
             myRenderer.material.SetColor("_EmissionColor", originalEmission);
         }
     }
-
-    // Agrégalo al final de tu clase FuenteAgua
+ 
     public string GetInteractionText()
     {
-        return "Presiona [E] para beber agua";
+        return textoInteraccion;
     }
 }

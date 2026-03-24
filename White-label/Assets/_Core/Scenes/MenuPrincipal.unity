@@ -280,6 +280,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3a1734467109534a88e2d43e720d3c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ControladorMenu
+  nombreEscenaJuego: Escena1
+  nombreEscenaMenu: MenuPrincipal
 --- !u!4 &290716307
 Transform:
   m_ObjectHideFlags: 0
