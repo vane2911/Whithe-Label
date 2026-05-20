@@ -15,10 +15,10 @@ EditorBuildSettings:
     path: Assets/_Sectors/Wellness/Scenes/SceneWellness.unity
     guid: f114675ac986b0b419a51d940abef110
   - enabled: 1
-    path: Assets/_Sectors/Fintech/Scenes/SceneFintech.unity
+    path: Assets/_Sectors/Fintech/Scenes/ScenePlayLaberinto.unity
     guid: b370b748d7d1c094bac47424125c492a
   - enabled: 1
-    path: Assets/_Sectors/Fintech/Scenes/Actividad1.unity
+    path: Assets/_Sectors/Fintech/Scenes/ScenePlayAvion.unity
     guid: 80bf78d82ad677f4eae8f39462622b55
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
