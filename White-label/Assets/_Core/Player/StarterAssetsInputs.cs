@@ -14,6 +14,10 @@ namespace StarterAssets
 		public bool sprint;
 		public bool interact;
 
+		[Header("Combat Inputs")]
+        public bool punchLeft;
+        public bool punchRight;
+
 		[Header("Movement Settings")]
 		public bool analogMovement;
 
@@ -85,6 +89,28 @@ namespace StarterAssets
 		public void OnInteract(InputValue value)
         {
             InteractInput(value.isPressed);
+        }
+
+		#if ENABLE_INPUT_SYSTEM
+        public void OnPunchLeft(InputValue value)
+        {
+            PunchLeftInput(value.isPressed);
+        }
+
+        public void OnPunchRight(InputValue value)
+        {
+            PunchRightInput(value.isPressed);
+        }
+		#endif
+
+        public void PunchLeftInput(bool newPunchState)
+        {
+            punchLeft = newPunchState;
+        }
+
+        public void PunchRightInput(bool newPunchState)
+        {
+            punchRight = newPunchState;
         }
 
 	}

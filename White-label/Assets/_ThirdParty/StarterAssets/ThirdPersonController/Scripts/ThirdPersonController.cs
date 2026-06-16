@@ -92,6 +92,38 @@ namespace StarterAssets
             JumpAndGravity();
             GroundedCheck();
             Move();
+            CombatCheck();
+        }
+
+        private void CombatCheck()
+        {
+            // Si el mensajero dice que presionaron el botón izquierdo
+            if (_input.punchLeft)
+            {
+                // 1. Primero buscamos los guantes y los guardamos en una variable
+                GloveController guantes = FindFirstObjectByType<GloveController>();
+                
+                // 2. Si los encontramos (es decir, si están encendidos en el minijuego), lanzamos el golpe
+                if (guantes != null)
+                {
+                    guantes.LanzarGolpeIzquierdo();
+                }
+                
+                _input.punchLeft = false; // Apagamos el botón para que no golpee infinitamente
+            }
+
+            // Si el mensajero dice que presionaron el botón derecho
+            if (_input.punchRight)
+            {
+                GloveController guantes = FindFirstObjectByType<GloveController>();
+                
+                if (guantes != null)
+                {
+                    guantes.LanzarGolpeDerecho();
+                }
+                
+                _input.punchRight = false; // Apagamos el botón
+            }
         }
 
         private void LateUpdate() => CameraRotation();
