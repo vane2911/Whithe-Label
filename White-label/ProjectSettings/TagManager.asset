@@ -6,6 +6,10 @@ TagManager:
   tags:
   - Interactable
   - CinemachineTarget
+  - AroExito
+  - AroFallo
+  - Obstaculo
+  - Estrella
   layers:
   - Default
   - TransparentFX
