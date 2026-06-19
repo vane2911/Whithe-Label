@@ -24,7 +24,6 @@ public class GestorJuego : MonoBehaviour
     void Start()
     {
         juegoTerminado = false;
-        vidas = 5; 
         puntos = 0;
         
         // 1. Empezamos el juego CONGELADO para esperar al jugador

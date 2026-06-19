@@ -4,7 +4,7 @@ public class ControlCaida : MonoBehaviour
 {
     [Header("Movimiento Base")]
     public float velocidadLateral = 20f; 
-    public float velocidadVertical = 15f;  // NUEVO: Qué tan rápido sube y baja
+    public float velocidadVertical = 15f; 
     public float velocidadAvance = 15f; 
     public float impulsoSalto = 5f;    
     public float gravedad = 15f;       
@@ -22,12 +22,9 @@ public class ControlCaida : MonoBehaviour
     private bool estaVolando = false; 
     private float velocidadY = 0f; 
     private float alturaEstable;    
-    
-       
 
     void Update()
     {
-
         if (Time.timeScale == 0f) return;
         
         // 1. Detectar el inicio del salto MANUAL
@@ -41,11 +38,16 @@ public class ControlCaida : MonoBehaviour
 
             if (scriptDelAvion != null)
             {
+                // --- ¡ELIMINACIÓN FÍSICA! ---
+                // Le arrancamos la física al avión para que sea solo un holograma visual
+                Destroy(scriptDelAvion.GetComponent<Collider>());
+                Destroy(scriptDelAvion.GetComponent<Rigidbody>());
+
                 Destroy(scriptDelAvion.gameObject, 20f); 
             }
         }
 
-        // 2. Comportamiento para caminar ANTES de saltar
+        // 2. Comportamiento para caminar ANTES de saltar (Caída automática)
         if (!estaVolando)
         {
             float caminarX = Input.GetAxis("Horizontal");
@@ -66,7 +68,11 @@ public class ControlCaida : MonoBehaviour
 
                 if (scriptDelAvion != null)
                 {
-                    Destroy(scriptDelAvion.gameObject, 10f); 
+                    // --- ¡ELIMINACIÓN FÍSICA! ---
+                    Destroy(scriptDelAvion.GetComponent<Collider>());
+                    Destroy(scriptDelAvion.GetComponent<Rigidbody>());
+
+                    Destroy(scriptDelAvion.gameObject, 20f); 
                 }
             }
         }
@@ -75,12 +81,10 @@ public class ControlCaida : MonoBehaviour
         if (estaVolando)
         {
             float movimientoX = Input.GetAxis("Horizontal");
-            float movimientoY = Input.GetAxis("Vertical"); // NUEVO: Detecta teclas Arriba/Abajo o W/S
+            float movimientoY = Input.GetAxis("Vertical"); 
 
-            // NUEVO: Modificamos la "altura ideal" según lo que presione el jugador
             alturaEstable += movimientoY * velocidadVertical * Time.deltaTime;
 
-            // Límite opcional (para que no se entierre en el pasto)
             if (alturaEstable < 2f) alturaEstable = 2f; 
 
             if (transform.position.y > alturaEstable + 2f)
@@ -90,7 +94,6 @@ public class ControlCaida : MonoBehaviour
             else 
             {
                 velocidadY = Mathf.Lerp(velocidadY, 0f, Time.deltaTime * 4f);
-                // Subí un poco el multiplicador final (a 5f) para que responda más rápido al control vertical
                 float alturaSuavizada = Mathf.Lerp(transform.position.y, alturaEstable, Time.deltaTime * 5f);
                 transform.position = new Vector3(transform.position.x, alturaSuavizada, transform.position.z);
             }
@@ -98,13 +101,11 @@ public class ControlCaida : MonoBehaviour
             Vector3 direccionVuelo = new Vector3(movimientoX * velocidadLateral, velocidadY, velocidadAvance);
             transform.Translate(direccionVuelo * Time.deltaTime, Space.World);
 
-            // Inclinación del cuerpo
             Quaternion poseDeVuelo = Quaternion.Euler(75, transform.rotation.eulerAngles.y, 0);
             transform.rotation = Quaternion.Slerp(transform.rotation, poseDeVuelo, Time.deltaTime * 3f);
 
             if (velocidadAvance >= 60f)
             {
-                // Nos aseguramos de tener el Gestor conectado y seguir vivos
                 if (gestorCentral != null && gestorCentral.vidas > 0)
                 {
                     gestorCentral.GanarJuego();
@@ -119,17 +120,11 @@ public class ControlCaida : MonoBehaviour
         if (otro.CompareTag("AroExito"))
         {
             velocidadAvance += aumentoVelocidad; 
-            
-            // Le avisamos al GameManager que sume 10 puntos
-            //if (gestorCentral != null) gestorCentral.SumarPuntos(10); 
-            
             Destroy(otro.transform.parent.gameObject); 
         }
         else if (otro.CompareTag("AroFallo"))
         {
-            // Le avisamos al GameManager que quite una vida
             if (gestorCentral != null) gestorCentral.PerderVida();
-            
             Destroy(otro.transform.parent.gameObject);
         }
     }
