@@ -34,6 +34,9 @@ namespace StarterAssets
         private void ControlarEstadoJuego()
         {
             bool uiActiva = popUpBienvenida != null && popUpBienvenida.activeSelf;
+
+            GameObject carrusel = GameObject.Find("Carrusel"); // O como se llame tu objeto
+            if (carrusel != null && carrusel.activeSelf) return;
  
             if (uiActiva && !_popUpAbiertoPrevio)
             {
@@ -43,23 +46,15 @@ namespace StarterAssets
             else if (!uiActiva && _popUpAbiertoPrevio)
             {
                 OnPopUpCerrado?.Invoke();
-                _popUpAbiertoPrevio = false;
+                _popUpAbiertoPrevio = false ;
             }
  
             if (uiActiva)
             {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
- 
                 _input.move = Vector2.zero;
                 _input.look = Vector2.zero;
                 _input.jump = false;
                 _input.sprint = false;
-            }
-            else
-            {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
             }
         }
  

@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class GeneradorAnillos : MonoBehaviour
 {
-    public GameObject anilloPrefab; // El "molde" de tu anillo
-    public Transform jugador;       // Para saber dónde estás y poner el anillo frente a ti
+    public GameObject anilloPrefab; 
+    public Transform jugador;      
     
     public float tiempoEntreAnillos = 2f;  // Cada cuántos segundos aparece un anillo
     public float distanciaAdelante = 150f; // Qué tan lejos (en el eje Z) aparece frente a ti

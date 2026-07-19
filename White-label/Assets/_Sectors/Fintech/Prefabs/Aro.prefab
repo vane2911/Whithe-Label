@@ -125,6 +125,7 @@ GameObject:
   m_Component:
   - component: {fileID: 220948087364242161}
   - component: {fileID: 2662237768563327334}
+  - component: {fileID: 8281043332435140178}
   m_Layer: 0
   m_Name: ZonaExito
   m_TagString: AroExito
@@ -168,6 +169,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &8281043332435140178
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3498772491810819659}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ce45215e9da7da4588d783f61029319, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AroExito
 --- !u!1 &3671613197301651026
 GameObject:
   m_ObjectHideFlags: 0

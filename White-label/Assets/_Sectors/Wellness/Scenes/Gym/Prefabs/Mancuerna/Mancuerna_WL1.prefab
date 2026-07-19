@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 9100867960945076451}
   - component: {fileID: 7292952871611367102}
   - component: {fileID: 2657760678310624590}
-  - component: {fileID: 2550611455495436230}
   m_Layer: 0
   m_Name: Mancuerna_WL1
   m_TagString: Untagged
@@ -93,17 +92,3 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &2550611455495436230
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7761148996260875315}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a431dcad6bdb56c44abfbff538353fdc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Mancuerna
-  logoCliente: {fileID: 2800000, guid: ef3ce80b6061f0e4f880d2432d525229, type: 3}
-  colorCorporativo: {r: 1, g: 1, b: 1, a: 1}

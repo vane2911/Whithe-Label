@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.Events;
 using System.Collections;
+using StarterAssets; 
+using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
 
 public class BrandImpactGameManager : MonoBehaviour
 {
@@ -18,16 +21,25 @@ public class BrandImpactGameManager : MonoBehaviour
 
     [Header("Referencias")]
     [SerializeField] private PunchingBagController punchingBag;
-    
     [SerializeField] private BrandImpactUI ui;
     [SerializeField] private GloveController gloveController;
+
+    [Header("Sistema de Combate (Fijar Blanco)")]
+    [SerializeField] private FijarBlanco sistemaFijado;
+    [SerializeField] private Transform costalObjetivo;
+
+    [Header("Conexión Móvil")]
+    [Tooltip("Arrastra aquí a tu PlayerArmature")]
+    public StarterAssetsInputs inputsJugador;
+    [Tooltip("Marca esto para que Unity finja ser un celular mientras editas")]
+    public bool simularMovilEnPC = true;
 
     [Header("Eventos")]
     public UnityEvent onGameStart;
     public UnityEvent onGameWin;
     public UnityEvent onGameLose;
 
-    public enum GameState { Idle, Playing, Win, Lose }
+    public enum GameState { Idle, Playing, Win, Lose, Paused }
     public GameState CurrentState { get; private set; } = GameState.Idle;
 
     private float remainingTime;
@@ -35,87 +47,165 @@ public class BrandImpactGameManager : MonoBehaviour
     private float holdTimer;
     private bool isHolding;
     private bool superPunchReady;
+    private bool previousMobileHold = false;
 
     public float RemainingTime => remainingTime;
     public int PunchesLanded => punchesLanded;
     public int TotalPunches => totalPunches;
+    private int totalPunchesAttemped;
     public float HoldProgress => Mathf.Clamp01(holdTimer / holdDuration);
 
     [Header("Efecto de Destrucción Final")]
-    [Tooltip("El costal original que se va a ocultar")]
     [SerializeField] private GameObject costalOriginal;
-    
-    [Tooltip("El Prefab azul de tu costal roto en pedacitos")]
     [SerializeField] private GameObject prefabCostalRoto;
-    
-    [Tooltip("El Sprite de la proteína de Smart Fit (con su script de flotar)")]
     [SerializeField] private GameObject recompensaProteina;
-    
-    [Tooltip("Fuerza con la que salen volando los pedazos")]
     [SerializeField] private float fuerzaExplosion = 500f;
-    
-    [Tooltip("Radio de la explosión")]
     [SerializeField] private float radioExplosion = 2f;
 
     [Header("Elementos a Ocultar al Ganar")]
-    [Tooltip("La base metálica del costal")]
     [SerializeField] private GameObject baseCostal;
-    
-    [Tooltip("Las cadenas de donde cuelga")]
     [SerializeField] private GameObject cadenasCostal;
 
     [Header("Elementos de la UI del Gameplay")]
-    [Tooltip("Arrastra aquí el objeto TimerText de la jerarquía")]
     [SerializeField] private GameObject timerTextObject;
-
-    [Tooltip("Arrastra aquí el objeto PunchCountText de la jerarquia")]
     [SerializeField] private GameObject punchCountTextObject; 
+    [SerializeField] private GameObject pauseButtonObject;
+
+    //[Header("Física del Costal")]
+    //[SerializeField] private CostalPendulo scriptCostalPendulo;
+
+    [Header("Cámara Personalizada")]
+    public MultiPerspectiveCamera camaraMultivista;
 
     private void Start()
     {
         if (recompensaProteina != null) recompensaProteina.SetActive(false);
-        // 1. Aseguramos que el estado inicial sea Idle
         CurrentState = GameState.Idle;
 
-        // 2. Apagamos el Canvas de la interfaz al iniciar
-        if (ui != null) ui.gameObject.SetActive(false);
-
-        // 3. Ocultamos los guantes por completo al iniciar
+       // if (ui != null) ui.gameObject.SetActive(false);
         if (gloveController != null) gloveController.gameObject.SetActive(false);
-
-        // 4. LA MAGIA: Usamos tu propio método para "congelar" el péndulo desde el inicio
         if (punchingBag != null) punchingBag.OnHoldStart();
+
+        if (sistemaFijado != null) sistemaFijado.activo = false;
+        
         SetGameplayUIActive(false);
     }
 
     private void Update()
     {
-        // Si no estamos en el estado Playing, no hacemos nada de lo de abajo
-        if (CurrentState != GameState.Playing) return;
+        if (CurrentState == GameState.Paused && Input.GetKeyDown(KeyCode.Escape))
+        {
+            ReanudarJuego();
+            return;
+        }
+
+        if(CurrentState != GameState.Playing) return;
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            PausarJuego();
+            return;
+        }
         
-        // Solo si el juego ya inició (Playing), corre el tiempo y detecta los golpes
         UpdateTimer();
         UpdateInput();
     }
 
+    public void PausarJuego()
+    {
+        CurrentState = GameState.Paused;
+        Time.timeScale = 0f; // 🔴 Congela el universo entero de Unity
+
+        // Liberamos el cursor
+        if (inputsJugador != null)
+        {
+            inputsJugador.cursorSiempreVisible = true; 
+            inputsJugador.SetCursorState(false);
+            inputsJugador.move = Vector2.zero;   
+            inputsJugador.look = Vector2.zero; 
+            
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        if (camaraMultivista != null) camaraMultivista.lockCamera = true;
+        if(pauseButtonObject != null) pauseButtonObject.SetActive(false);
+
+        // Le avisamos a la UI que muestre la pantalla
+        ui?.TogglePauseScreen(true);
+    }
+
+    public void ReanudarJuego()
+    {
+        CurrentState = GameState.Playing;
+        Time.timeScale = 1f; // 🔴 El universo vuelve a moverse
+
+        // Volvemos a atrapar el cursor
+        if (inputsJugador != null)
+        {
+            inputsJugador.cursorSiempreVisible = false; 
+            inputsJugador.SetCursorState(true);
+            
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+
+        if (camaraMultivista != null) camaraMultivista.lockCamera = false;
+        if(pauseButtonObject != null) pauseButtonObject.SetActive(true);
+
+
+        // Le avisamos a la UI que esconda la pantalla
+        ui?.TogglePauseScreen(false);
+    }
+
     public void StartGame()
     {
+        Time.timeScale =1f;
+
+        totalPunchesAttemped = 0;
+
         if (recompensaProteina != null) recompensaProteina.SetActive(false);
         remainingTime = totalTime;
         punchesLanded = 0;
         holdTimer = 0f;
         isHolding = false;
         superPunchReady = false;
+        previousMobileHold = false;
         CurrentState = GameState.Playing;
 
-        // 1. Volvemos a encender la interfaz en pantalla
-        if (ui != null) ui.gameObject.SetActive(true);
-
-        // 2. Hacemos aparecer los guantes de boxeo
+        //if (ui != null) ui.gameObject.SetActive(true);
         if (gloveController != null) gloveController.gameObject.SetActive(true);
-
-        // 3. Activamos el script del costal para que empiece a balancearse
         if (punchingBag != null) punchingBag.enabled = true;
+
+        if (sistemaFijado != null)
+        {
+            sistemaFijado.objetivo = costalObjetivo;
+            sistemaFijado.activo = true;
+        }
+
+        if (inputsJugador != null)
+        {
+            inputsJugador.cursorSiempreVisible = false; 
+            inputsJugador.tutorialActivo = false;
+            inputsJugador.SetCursorState(true);
+            inputsJugador.move = Vector2.zero;   
+            inputsJugador.look = Vector2.zero; 
+            
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = false;
+        }
+
+        // 🔴 ¡LA MAGIA DEL CARRUSEL! Frenamos tu cámara personalizada
+        if (camaraMultivista != null)
+        {
+            camaraMultivista.lockCamera = false;
+        }
+
+        // 🟢 3. DESCONGELAR LAS FÍSICAS DEL COSTAL
+        /*if (scriptCostalPendulo != null)
+        {
+            scriptCostalPendulo.estaCongelado = false;
+        }*/
 
         SetGameplayUIActive(true);
 
@@ -123,6 +213,13 @@ public class BrandImpactGameManager : MonoBehaviour
         ui?.UpdateAll(this);
         onGameStart?.Invoke();
     }
+
+    public void VolverAlMenuPrincipal()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
 
     private void UpdateTimer()
     {
@@ -138,7 +235,6 @@ public class BrandImpactGameManager : MonoBehaviour
 
     private void UpdateInput()
     {
-        // 1. Inicia carga
         if (IsInputDown())
         {
             isHolding = true;
@@ -148,7 +244,6 @@ public class BrandImpactGameManager : MonoBehaviour
             ui?.ShowHoldBar();
         }
 
-        // 2. Mantiene carga
         if (isHolding && IsInputHolding())
         {
             holdTimer += Time.deltaTime;
@@ -161,11 +256,10 @@ public class BrandImpactGameManager : MonoBehaviour
             }
         }
 
-        // 3. Suelta el golpe
         if (isHolding && IsInputUp())
         {
-            // BUSCA ESTA LÍNEA O AGREGA LA REFERENCIA A TU GLOVE CONTROLLER
-            // Suponiendo que tienes una referencia llamada 'gloveController'
+            totalPunchesAttemped ++;
+            
             gloveController?.DetenerCarga(); 
 
             if (punchingBag != null && punchingBag.IsInCenterZone && holdTimer >= holdDuration)
@@ -174,7 +268,6 @@ public class BrandImpactGameManager : MonoBehaviour
             }
             else
             {
-                // Falló por soltar antes de tiempo o no atinarle al centro
                 punchingBag?.OnInvalidRelease();
                 ui?.ShowInvalidPunchFeedback();
             }
@@ -183,6 +276,11 @@ public class BrandImpactGameManager : MonoBehaviour
             holdTimer = 0f;
             superPunchReady = false;
             ui?.ResetHoldBar();
+        }
+
+        if (EsDispositivoMovil() && inputsJugador != null)
+        {
+            previousMobileHold = inputsJugador.isHoldingPunchMobile;
         }
     }
 
@@ -201,18 +299,17 @@ public class BrandImpactGameManager : MonoBehaviour
         CurrentState = GameState.Win;
         isHolding = false;
 
-        // 1. Desaparecemos el costal original
+        if (sistemaFijado != null) sistemaFijado.activo = false;
+
         if (costalOriginal != null) costalOriginal.SetActive(false);
         if (baseCostal != null) baseCostal.SetActive(false);
         if (cadenasCostal != null) cadenasCostal.SetActive(false);
         if (gloveController != null) gloveController.gameObject.SetActive(false);
         SetGameplayUIActive(false);
 
-        // 2. Instanciamos la versión rota y COPIAMOS LA ROTACIÓN
         if (prefabCostalRoto != null && costalOriginal != null)
         {
             GameObject costalRoto = Instantiate(prefabCostalRoto, costalOriginal.transform.position, costalOriginal.transform.rotation);
-
             Rigidbody[] pedazos = costalRoto.GetComponentsInChildren<Rigidbody>();
             Vector3 epicentro = costalOriginal.transform.position - (Vector3.up * 0.5f);
 
@@ -222,10 +319,25 @@ public class BrandImpactGameManager : MonoBehaviour
             }
         }
 
-        // 3. Recompensa (¡AQUÍ ESTÁ EL CAMBIO!)
+        if (inputsJugador != null)
+        {
+            inputsJugador.cursorSiempreVisible = true; 
+            inputsJugador.SetCursorState(false);
+            inputsJugador.move = Vector2.zero;   
+            inputsJugador.look = Vector2.zero; 
+            
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        // 🔴 ¡LA MAGIA DEL CARRUSEL! Frenamos tu cámara personalizada
+        if (camaraMultivista != null)
+        {
+            camaraMultivista.lockCamera = true;
+        }
+
         if (recompensaProteina != null)
         {
-            // Ya no la teletransportamos, solo la encendemos justo donde tú la dejaste flotando en tu escena
             recompensaProteina.SetActive(true);
         }
 
@@ -236,7 +348,38 @@ public class BrandImpactGameManager : MonoBehaviour
     {
         CurrentState = GameState.Lose;
         isHolding = false;
-        ui?.ShowLoseScreen();
+
+        if (sistemaFijado != null) sistemaFijado.activo = false;
+
+        // --- 1. LIMPIEZA VISUAL ---
+        if (gloveController != null) gloveController.gameObject.SetActive(false);
+        SetGameplayUIActive(false);
+        ui?.ResetHoldBar(); 
+
+        // --- 2. CONGELAR COSTAL ---
+        // (Si decides descongelarlo, solo quítale las // a la siguiente línea)
+        //if (scriptCostalPendulo != null) scriptCostalPendulo.estaCongelado = true;
+
+        // --- 3. CONGELAR JUGADOR Y LIBERAR CURSOR ---
+        if (inputsJugador != null)
+        {
+            inputsJugador.cursorSiempreVisible = true; 
+            inputsJugador.SetCursorState(false);
+            inputsJugador.move = Vector2.zero;   
+            inputsJugador.look = Vector2.zero; 
+            
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        // 🔴 ¡LA MAGIA DEL CARRUSEL! Frenamos tu cámara personalizada
+        if (camaraMultivista != null)
+        {
+            camaraMultivista.lockCamera = true;
+        }
+
+        // --- 4. MOSTRAR PANTALLA ---
+        ui?.ShowLoseScreen(punchesLanded, totalPunchesAttemped);
         onGameLose?.Invoke();
     }
 
@@ -244,32 +387,48 @@ public class BrandImpactGameManager : MonoBehaviour
     {
         if (timerTextObject != null) timerTextObject.SetActive(activeState);
         if (punchCountTextObject != null) punchCountTextObject.SetActive(activeState);
+        if (pauseButtonObject != null) pauseButtonObject.SetActive(activeState);
     }
 
     private IEnumerator WinSequence()
     {
         yield return new WaitForSeconds(1.5f);
-        ui?.ShowWinScreen(brandConfig);
+        ui?.ShowWinScreen(brandConfig, punchesLanded, totalPunchesAttemped);
         onGameWin?.Invoke();
     }
 
-    // ─── LÓGICA DE CONTROLES (Preparado para VR) ───
+    // ─── LÓGICA DE CONTROLES (Protegida) ───
     
+    private bool EsDispositivoMovil()
+    {
+        bool esMovil = SystemInfo.deviceType == DeviceType.Handheld && !UnityEngine.XR.XRSettings.isDeviceActive;
+#if UNITY_EDITOR
+        esMovil = simularMovilEnPC;
+#endif
+        return esMovil;
+    }
+
     private bool IsInputDown()
     {
-        // Devuelve true si presionas el clic izquierdo (0) O el derecho (1)
+        if (EsDispositivoMovil() && inputsJugador != null)
+            return inputsJugador.isHoldingPunchMobile && !previousMobileHold;
+            
         return Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1);
     }
 
     private bool IsInputHolding()
     {
-        // Devuelve true mientras mantengas presionado cualquiera de los dos
+        if (EsDispositivoMovil() && inputsJugador != null)
+            return inputsJugador.isHoldingPunchMobile;
+
         return Input.GetMouseButton(0) || Input.GetMouseButton(1);
     }
 
     private bool IsInputUp()
     {
-        // Devuelve true en el momento exacto en que sueltas cualquiera de los dos
+        if (EsDispositivoMovil() && inputsJugador != null)
+            return !inputsJugador.isHoldingPunchMobile && previousMobileHold;
+
         return Input.GetMouseButtonUp(0) || Input.GetMouseButtonUp(1);
     }
 }

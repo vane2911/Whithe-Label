@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
+using Unity.VisualScripting;
 
 public class BrandImpactUI : MonoBehaviour
 {
@@ -39,10 +40,25 @@ public class BrandImpactUI : MonoBehaviour
     [Tooltip("Configura los colores desde frío (0) hasta caliente (1)")]
     [SerializeField] private Gradient colorEnergia;
 
+    [Header("Estadisticas Finales Lose")]
+    [SerializeField] private TMP_Text textoGolpesPerfectos;
+    [SerializeField] private TMP_Text textoGolpesDados;
+    [SerializeField] private TMP_Text textoPrecision;
+
+    [Header("Estadisticas Finales Win")]
+    [SerializeField] private TMP_Text textoGolpesP;
+    [SerializeField] private TMP_Text textoGolpesD;
+    [SerializeField] private TMP_Text textoPr;
+
+    [Header("Pantalla de pausa")] 
+    [SerializeField] private GameObject pauseScreen;
+
+
     private void Awake()
     {
         winScreen?.SetActive(false);
         loseScreen?.SetActive(false);
+        pauseScreen?.SetActive(false);
         holdBarContainer?.SetActive(false);
 
         if (holdBarFill != null)
@@ -59,6 +75,17 @@ public class BrandImpactUI : MonoBehaviour
         UpdateTimer(manager.RemainingTime);
         UpdatePunchCount(manager.PunchesLanded, manager.TotalPunches);
         ResetHoldBar();
+
+        if (loseScreen != null) loseScreen.SetActive(false);
+        if (pauseScreen != null) pauseScreen.SetActive(false);
+    }
+
+    public void TogglePauseScreen(bool activo)
+    {
+        if (pauseScreen != null)
+        {
+            pauseScreen.SetActive(activo);
+        }
     }
 
     // ── Timer ──────────────────────────────────────
@@ -152,7 +179,7 @@ public class BrandImpactUI : MonoBehaviour
     }
 
     // ── Pantallas de resultado ─────────────────────
-    public void ShowWinScreen(BrandImpactConfig config)
+    public void ShowWinScreen(BrandImpactConfig config, int golpesPerfectos, int golpesDados)
     {
         if (winScreen == null) return;
         winScreen.SetActive(true);
@@ -166,12 +193,34 @@ public class BrandImpactUI : MonoBehaviour
             if (prizeDescriptionText != null)
                 prizeDescriptionText.text = config.prizeDescription;
         }
+
+        ActualizarEstadisticas(golpesPerfectos, golpesDados);
+
     }
 
-    public void ShowLoseScreen()
+    public void ShowLoseScreen(int golpesPerfectos, int golpesDados)
     {
         if (loseScreen == null) return;
         loseScreen.SetActive(true);
+
+        ActualizarEstadisticas(golpesPerfectos, golpesDados);
+    }
+
+    private void ActualizarEstadisticas(int perfectos, int dados)
+    {
+        // 1. Calculamos la precisión una sola vez para no repetir matemáticas
+        float precision = dados > 0 ? ((float)perfectos / dados) * 100f : 0f;
+        string textoPorcentaje = Mathf.RoundToInt(precision) + "%";
+
+        // 2. Alimentamos los textos de la pantalla de DERROTA
+        if (textoGolpesPerfectos != null) textoGolpesPerfectos.text = perfectos.ToString();
+        if (textoGolpesDados != null) textoGolpesDados.text = dados.ToString();
+        if (textoPrecision != null) textoPrecision.text = textoPorcentaje;
+
+        // 3. Alimentamos los textos de la pantalla de VICTORIA
+        if (textoGolpesP != null) textoGolpesP.text = perfectos.ToString();
+        if (textoGolpesD != null) textoGolpesD.text = dados.ToString();
+        if (textoPr != null) textoPr.text = textoPorcentaje;
     }
 
     // ── Corrutinas ─────────────────────────────────

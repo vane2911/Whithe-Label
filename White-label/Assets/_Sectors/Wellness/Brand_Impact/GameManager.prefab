@@ -1,0 +1,144 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3460004766359857617
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7006021157938318749}
+  - component: {fileID: 3792018844052718959}
+  - component: {fileID: 525014881977285393}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7006021157938318749
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3460004766359857617}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.18248, y: 1.3911, z: 6.73291}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3792018844052718959
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3460004766359857617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75e9de38cff42fd469f17b5a520f9072, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BrandImpactGameManager
+  brandConfig: {fileID: 11400000, guid: 7c1b783dae95b1741ad785266e46d702, type: 2}
+  totalTime: 90
+  holdDuration: 2
+  totalPunches: 10
+  puntoImpacto_L: {fileID: 0}
+  puntoImpacto_R: {fileID: 0}
+  punchingBag: {fileID: 0}
+  ui: {fileID: 525014881977285393}
+  gloveController: {fileID: 0}
+  sistemaFijado: {fileID: 0}
+  costalObjetivo: {fileID: 0}
+  inputsJugador: {fileID: 0}
+  simularMovilEnPC: 0
+  onGameStart:
+    m_PersistentCalls:
+      m_Calls: []
+  onGameWin:
+    m_PersistentCalls:
+      m_Calls: []
+  onGameLose:
+    m_PersistentCalls:
+      m_Calls: []
+  costalOriginal: {fileID: 0}
+  prefabCostalRoto: {fileID: 3253841010457086094, guid: 0b0f5b70a0590f84e9b1a7a5e67f34f1, type: 3}
+  recompensaProteina: {fileID: 0}
+  fuerzaExplosion: 500
+  radioExplosion: 2
+  baseCostal: {fileID: 0}
+  cadenasCostal: {fileID: 0}
+  timerTextObject: {fileID: 0}
+  punchCountTextObject: {fileID: 0}
+  pauseButtonObject: {fileID: 0}
+  camaraMultivista: {fileID: 0}
+--- !u!114 &525014881977285393
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3460004766359857617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2c9883695c66f1449b425d32a85b1da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BrandImpactUI
+  timerText: {fileID: 0}
+  punchCountText: {fileID: 0}
+  holdBarContainer: {fileID: 0}
+  holdBarFill: {fileID: 0}
+  holdBarGlow: {fileID: 0}
+  arrowContainer: {fileID: 0}
+  arrowTimeText: {fileID: 0}
+  barMinY: -32.8
+  barMaxY: 22.1
+  maxHoldTime: 2
+  winScreen: {fileID: 0}
+  prizeImage: {fileID: 0}
+  prizeNameText: {fileID: 0}
+  prizeDescriptionText: {fileID: 0}
+  loseScreen: {fileID: 0}
+  colorEnergia:
+    serializedVersion: 2
+    key0: {r: 0.40697044, g: 0.86810315, b: 0.98490566, a: 1}
+    key1: {r: 1, g: 0.9022271, b: 0.081131995, a: 1}
+    key2: {r: 1, g: 0.19433957, b: 0.19433957, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 32768
+    ctime2: 65535
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 3
+    m_NumAlphaKeys: 2
+  textoGolpesPerfectos: {fileID: 0}
+  textoGolpesDados: {fileID: 0}
+  textoPrecision: {fileID: 0}
+  textoGolpesP: {fileID: 0}
+  textoGolpesD: {fileID: 0}
+  textoPr: {fileID: 0}
+  pauseScreen: {fileID: 0}

@@ -44,6 +44,10 @@ namespace StarterAssets
         [Tooltip("Referencia al sistema de cámaras múltiples para adaptar la rotación")]
         public MultiPerspectiveCamera perspectiveCamera;
 
+        [Header("Controles Móviles")]
+        [Tooltip("Arrastra aquí el objeto Padre de tu Joystick Personalizado")]
+        public JoystickPersonalizado miJoystick;
+
         // Propiedades de estado
         private float _cinemachineTargetYaw;
         private float _cinemachineTargetPitch;
@@ -159,8 +163,25 @@ namespace StarterAssets
             CinemachineCameraTarget.transform.rotation = Quaternion.Euler(_cinemachineTargetPitch + CameraAngleOverride, _cinemachineTargetYaw, 0.0f);
         }
 
+        /*para hacer que el personaje en 3era persona se mueva 
         private void Move()
         {
+
+            if (miJoystick == null)
+            {
+                Debug.LogWarning("¡ALERTA! La casilla 'miJoystick' está VACÍA en el Inspector del personaje.");
+            }
+            else
+            {
+                Debug.Log("Joystick conectado al personaje. Valor actual: " + miJoystick.InputVector);
+            }
+
+            Vector2 movimientoActual = _input.move;
+            if (miJoystick != null && miJoystick.InputVector != Vector2.zero)
+            {
+                movimientoActual = miJoystick.InputVector;
+            }
+
             float targetSpeed = _input.move == Vector2.zero ? 0.0f : (_input.sprint ? SprintSpeed : MoveSpeed);
             float currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;
             float speedOffset = 0.1f;
@@ -176,8 +197,7 @@ namespace StarterAssets
             _animationBlend = Mathf.Lerp(_animationBlend, targetSpeed, Time.deltaTime * SpeedChangeRate);
             if (_animationBlend < 0.01f) _animationBlend = 0f;
 
-            Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
-
+            Vector3 inputDirection = new Vector3(movimientoActual.x, 0.0f, movimientoActual.y).normalized;
             if (_input.move != Vector2.zero)
             {
                 // Lógica de rotación adaptativa según el modo de cámara
@@ -214,6 +234,42 @@ namespace StarterAssets
                 _animator.SetFloat(_animIDSpeed, _animationBlend);
                 _animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
             }
+        }*/
+
+        private void Move()
+        {
+            float targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
+
+            if (_input.move == Vector2.zero) targetSpeed = 0.0f;
+
+            float currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;
+            float speedOffset = 0.1f;
+            float inputMagnitude = _input.analogMovement ? _input.move.magnitude : 1f;
+
+            if (currentHorizontalSpeed < targetSpeed - speedOffset || currentHorizontalSpeed > targetSpeed + speedOffset)
+            {
+                _speed = Mathf.Lerp(currentHorizontalSpeed, targetSpeed * inputMagnitude, Time.deltaTime * SpeedChangeRate);
+                _speed = Mathf.Round(_speed * 1000f) / 1000f;
+            }
+            else
+            {
+                _speed = targetSpeed;
+            }
+
+            Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
+            
+            _targetRotation = _mainCamera.transform.eulerAngles.y;
+            float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity, RotationSmoothTime);
+            transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+
+            Vector3 targetDirection = Vector3.zero;
+            if (_input.move != Vector2.zero)
+            {
+                float moveDirectionAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + _mainCamera.transform.eulerAngles.y;
+                targetDirection = Quaternion.Euler(0.0f, moveDirectionAngle, 0.0f) * Vector3.forward;
+            }
+
+            _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) + new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
         }
 
         private void JumpAndGravity()

@@ -31,6 +31,9 @@ public class MultiPerspectiveCamera : MonoBehaviour
     [Header("Colisiones")]
     public LayerMask obstacleLayers;
 
+    [Header("Control Externo")]
+    public bool lockCamera = false; // Nuestro freno de mano
+
     private Vector2 angle = new Vector2(90 * Mathf.Deg2Rad, 0);
     private new Camera camera;
     private Vector2 nearPlaneSize;
@@ -49,12 +52,21 @@ public class MultiPerspectiveCamera : MonoBehaviour
         CalculateNearPlaneSize();
 
         //Cursor.lockState = CursorLockMode.Locked;
+
+        if (currentFollow != null)
+        {
+            // Le sumamos 90 grados por la fórmula trigonométrica específica de tu script
+            angle.x = (currentFollow.eulerAngles.y + 90f) * Mathf.Deg2Rad;
+            angle.y = -5f * Mathf.Deg2Rad; // Un ligero ángulo hacia abajo para una vista perfecta
+        }
     }
 
     void Update()
     {
         ManejarCambioVistas();
         ManejarInputsMouse();
+
+        if(!lockCamera) return;
     }
 
     void ManejarCambioVistas()
@@ -97,8 +109,10 @@ public class MultiPerspectiveCamera : MonoBehaviour
         }
     }
 
-void ManejarInputsMouse()
+    void ManejarInputsMouse()
     {
+        if (lockCamera) return;
+
         Vector2 lookInput = Vector2.zero;
 
         // 1. Capturamos el input del Gamepad (Stick Derecho)
@@ -147,6 +161,8 @@ void ManejarInputsMouse()
 
     void LateUpdate()
     {
+        if (lockCamera) return; 
+
         if (currentFollow == null) return;
 
         // Cálculo de posición orbital basado en los ángulos
@@ -155,6 +171,8 @@ void ManejarInputsMouse()
             -Mathf.Sin(angle.y),
             -Mathf.Sin(angle.x) * Mathf.Cos(angle.y)
         );
+
+        
 
         float distance = defaultDistance;
         Vector3[] points = GetCameraCollisionPoints(direction);

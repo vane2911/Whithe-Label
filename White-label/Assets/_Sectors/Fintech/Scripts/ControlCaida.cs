@@ -22,10 +22,16 @@ public class ControlCaida : MonoBehaviour
     private bool estaVolando = false; 
     private float velocidadY = 0f; 
     private float alturaEstable;    
+    private float tiempoDeGracia = 0.5f;
 
     void Update()
     {
         if (Time.timeScale == 0f) return;
+
+        if (tiempoDeGracia > 0f)
+        {
+            tiempoDeGracia -= Time.deltaTime;
+        }
         
         // 1. Detectar el inicio del salto MANUAL
         if (!estaVolando && Input.GetKeyDown(KeyCode.Space))
@@ -34,6 +40,8 @@ public class ControlCaida : MonoBehaviour
             velocidadY = impulsoSalto; 
             alturaEstable = transform.position.y - metrosDeCaida; 
             
+            if (gestorCentral != null) gestorCentral.ReproducirSonidoSalto();
+
             transform.SetParent(null); 
 
             if (scriptDelAvion != null)
@@ -58,17 +66,18 @@ public class ControlCaida : MonoBehaviour
 
             Debug.DrawRay(transform.position + Vector3.up * 1f, Vector3.down * 5f, Color.red);
 
-            if (!Physics.Raycast(transform.position + Vector3.up * 1f, Vector3.down, 5f))
+            if (!Physics.Raycast(transform.position + Vector3.up * 1f, Vector3.down, 5f) && tiempoDeGracia <= 0f)
             {
                 estaVolando = true; 
                 velocidadY = 0f; 
                 alturaEstable = transform.position.y - metrosDeCaida; 
                 
+                if (gestorCentral != null) gestorCentral.ReproducirSonidoSalto();
+
                 transform.SetParent(null); 
 
                 if (scriptDelAvion != null)
                 {
-                    // --- ¡ELIMINACIÓN FÍSICA! ---
                     Destroy(scriptDelAvion.GetComponent<Collider>());
                     Destroy(scriptDelAvion.GetComponent<Rigidbody>());
 
@@ -104,6 +113,7 @@ public class ControlCaida : MonoBehaviour
             Quaternion poseDeVuelo = Quaternion.Euler(75, transform.rotation.eulerAngles.y, 0);
             transform.rotation = Quaternion.Slerp(transform.rotation, poseDeVuelo, Time.deltaTime * 3f);
 
+            //Si se llega a una distancia de 60 se gana
             if (velocidadAvance >= 60f)
             {
                 if (gestorCentral != null && gestorCentral.vidas > 0)

@@ -3,7 +3,17 @@ guid: 6b0e2cdb8d3115a4681d4050473ff680
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Base
+    second: {fileID: 2100000, guid: 04b23ddff1653c840b2898e2036c8187, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Neon
+    second: {fileID: 2100000, guid: 835436e42237b2f4c9c16ce683e5d057, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
